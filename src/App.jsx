@@ -5,6 +5,8 @@ import Getränke from "./components/Getränke";
 import Getränk from "./components/Getränk";
 import Kunde from "./components/Kunde";
 import Kunden from "./components/Kunden";
+import Deckelliste from "./components/Deckelliste";
+import Deckel from "./components/Deckel";
 
 function App() {
     
@@ -18,6 +20,8 @@ function App() {
                 <Route path="/getraenk/:id" element={<Getränk />} />
                 <Route path="/kunden" element={<Kunden />} />
                 <Route path="/kunde/:id" element={<Kunde />} />
+                <Route path="/deckelliste" element={<Deckelliste />} />
+                <Route path="/deckel/:kundenId" element={<Deckel />} />
             </Routes>
         </div>
     );

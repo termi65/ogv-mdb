@@ -37,6 +37,9 @@ export default function Navbar() {
                             <li className="nav-item" key={2}>
                                 <Link to="/kunden" className="px-2 text-info" onClick={closeNav}><i class="bi bi-eyeglasses"></i>Kunden</Link>
                             </li>
+                            <li className="nav-item" key={2}>
+                                <Link to="/deckelliste" className="px-2 text-info" onClick={closeNav}><i class="bi bi-eyeglasses"></i>Deckel</Link>
+                            </li>
                         </ul>
                     </div>
                 </div>
