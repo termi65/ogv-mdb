@@ -15,10 +15,10 @@ export default function Deckel() {
     const [getränkeliste, setGetränkeliste] = useState([]);
     const [selectedGetränk, setSelectedGetränk] = useState([]);
     
-    const ladeDeckel = async () => {
-        const d = await db.deckel.where("kundenId").equals(kundenId).toArray();
+    const ladeDeckel = async (kid) => {
+        const d = await db.deckel.where("kundenId").equals(kid).toArray();
         setDeckelliste(d);
-        const k = await db.kunden.where("id").equals(kundenId).first();
+        const k = await db.kunden.where("id").equals(kid).first();
         setKunde(k);
         const g = await db.getränke.toArray();
         setGetränkeliste(g);

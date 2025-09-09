@@ -18,18 +18,17 @@ const Deckelliste = () => {
     const [currentKundenId, setCurrentKundenId] = useState(0);
     const [currentDeckelId, setCurrentDeckelId] = useState(0);
 
-    const [kundenMitDeckel, setKundenMitDeckel] = useState([]);
 
     // Funktionen
     const berechneGesamtsummeKunde = (kid) => {
-        const filteredvl = deckelliste.filter((item) => item.kundenId === kid);
+        const filteredvl = deckelliste.filter((dck) => dck.kundenId === kid);
         return filteredvl.reduce((sum, vl) => sum + vl.getränke.preis * vl.anzahl, 0);
     }
 
     const incGetränk = async (id, anzahl) => {
         try {
             await db.deckel.update(id, {anzahl: anzahl+1});
-            onRefresh();
+            ladeDaten();
         }
         catch (error) {
             alert("Fehler! " + error);
@@ -39,50 +38,69 @@ const Deckelliste = () => {
     const decGetränk = async (id, anzahl) => {
         try {
             await db.deckel.update(id, {anzahl: anzahl-1});
-            onRefresh();
+            ladeDaten();
         }
         catch (error) {
             alert("Fehler! " + error);
         }
     }
 
-    const delGetränk = async (id) => {
+    const löscheAlleDeckel = async () => {
+        await db.deckel.clear();
+    }
+    
+    const delGetränk = async () => {
         try {
             await db.deckel
                 .where("id")
-                .eq(currentDeckelId)
+                .equals(currentDeckelId)
                 .delete();
-            onRefresh();
+            ladeDaten();
         }
         catch (error) {
             alert("Fehler! " + error);
         }
+    }
+
+    const kundenMitDeckel = async(dl) => {
+        const alleKunden = await db.kunden.toArray();
+        let kmd = [];
+        let index = -1;
+        await alleKunden.map((k) => {
+            index = dl.findIndex((el) => el.kundenId === k.id);
+            if (index >= 0)
+                kmd.push(alleKunden[index]);
+        })
+        return kmd;
     }
 
     const ladeDaten = async () => {
         const dl = await db.deckel.toArray();
-        setDeckelliste (dl);
-        const kl = await db.kunden.toArray();
-        setKunden (kl);
-
-        const kmd = kl.filter(kunde =>
-            dl.some(v => v.kundenId === kunde.id)
-        );
-        setKundenMitDeckel(kmd);
-
+        const kl = await kundenMitDeckel(dl);
         const gl = await db.getränke.toArray();
-        setGetränke(gl);
-    }
+        
+        // Evtl. sortiert!
+        // const dlMitNamen = dl.sort((a, b) => a.kundenId - b.kundenId).map(eintrag => {
 
-    const onEdit = () => {
-        navigate(`deckel/${currentDeckelId}`);
-    }
-    const löscheAlleDeckel = async () => {
-        await db.deckel.clear();
-    }
+        const dlMitNamen = dl.map(eintrag => {
+            const kunde = kl.find(k => k.id === eintrag.kundenId);
+            const getränk = gl.find(g => g.id === eintrag.getränkId);
+            return {
+                ...eintrag,
+                kundenName: kunde ? kunde.name : "Unbekannt",
+                getränkName: getränk ? getränk.name : "Unbekannt",
+                preis: getränk ? getränk.preis : 0
+            };
+        });
+
+        setDeckelliste(dlMitNamen);
+        setKunden(kl);
+        setGetränke(gl);
+    };
 
     useEffect(() => {
         ladeDaten();
+        
     },[]);
 
     return (
@@ -95,10 +113,15 @@ const Deckelliste = () => {
             <button className="btn btn-success btn-sm" onClick={löscheAlleDeckel}>
                 alle Löschen
             </button>
-            {kundenMitDeckel.map((m) => (
-                    <div key={m.id} className="mt-2">
-                        <p className="">{m.name} {m.vorname}
-                            <button className="ms-2 btn border-primary rounded" onClick={() => onEdit(m)}>+</button>
+            {kunden.map((ku) => {
+                const einträge = deckelliste.filter(d => d.kundenId = ku.id)
+                if (einträge.length === 0) {
+                    return null;
+                }
+                return (
+                    <div key={ku.id} className="mt-2">
+                        <p className="">{ku.name} {ku.vorname}
+                            <button className="ms-2 btn border-primary rounded" onClick={() => navigate(`/deckel/${ku.id}`)}>+</button>
                         </p>
                         <div >
                             <table className="table table-bordered mt-2 border-primary p-1">
@@ -119,24 +142,22 @@ const Deckelliste = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {deckelliste
-                                        .filter((item) => item.kundenId === m.id)
-                                        .map((eintrag) => {
-                                            const getränk = getränke.find((g) => g.id === eintrag.getränke.id);
-                                            return (
+                                    {einträge.map((eintrag) => {
+                                        const getränk = getränke.find ((g) => g.id = eintrag.getränkId)
+                                        return (
                                                 <tr key={eintrag.id} className="p-2 border-b">
-                                                    <td>{getränk.bezeichnung}</td> 
+                                                    <td>{getränk ? getränk.bezeichnung : 'null'}</td> 
                                                     {eintrag.anzahl >= 0 ? 
                                                         <>
                                                             <td className="text-center">{eintrag.anzahl}</td>
-                                                            <td className="text-end">{formatNumber(getränk.preis)}</td>
-                                                            <td className="text-end">{formatNumber(getränk.preis * eintrag.anzahl)}</td>
+                                                            <td className="text-end">{getränk ? formatNumber(getränk.preis) : 0}</td>
+                                                            <td className="text-end">{getränk ? formatNumber(getränk.preis * eintrag.anzahl) : 0}</td>
                                                         </> 
                                                         : 
                                                         <>
                                                             <td className="text-center text-danger">{eintrag.anzahl}</td>
-                                                            <td className="text-end text-danger">{formatNumber(getränk.preis)}</td>
-                                                            <td className="text-end text-danger">{formatNumber(getränk.preis * eintrag.anzahl)}</td>
+                                                            <td className="text-end text-danger">{getränk ? formatNumber(getränk.preis) : 0}</td>
+                                                            <td className="text-end text-danger">{getränk ? formatNumber(getränk.preis * eintrag.anzahl) : 0}</td>
                                                         </>}
                                                     <td className="text-center">
                                                         <button className="btn btn-primary" onClick={(e) => {e.preventDefault(); incGetränk(eintrag.id, eintrag.anzahl); }}>
@@ -161,25 +182,26 @@ const Deckelliste = () => {
                                             );
                                         })}
                                 </tbody>
-                                <tfoot>
+                                {/* <tfoot>
                                     <tr>
                                         <td colSpan="3" className="text-end fw-bold">Gesamt:</td>
-                                        <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(m.id) >= 0 ? "text-dark" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(m.id))} €</td>
+                                        <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(ku.id) >= 0 ? "text-dark" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(ku.id))} €</td>
                                         <td colSpan="3"></td>
                                     </tr>
                                     <tr>
                                         <td colSpan="4" className="text-end">
                                             <button className="btn btn-primary"
-                                                onClick={() => {setCurrentKundenId(m.id); setShowModalDeckel(true)}}>
+                                                onClick={() => {setCurrentKundenId(ku.id); setShowModalDeckel(true)}}>
                                                 Bezahlen
                                             </button>
                                         </td>
                                         <td colSpan="3"></td>
                                     </tr>
-                                </tfoot>
+                                </tfoot> */}
                             </table>
                         </div>
-                    </div>)
+                    </div>
+            )}
                 )}
             <Dialog show={showModalDeckel}
                 title='Achtung'
@@ -193,7 +215,7 @@ const Deckelliste = () => {
                 text='Soll der Eintrag wirklich gelöscht werden?'
                 nurOK={false}
                 handleClose={() => setShowModalEintrag(false)}
-                handleOK={() => {setShowModalEintrag(false); delGetränk(currentDeckelId)}}/>
+                handleOK={() => {setShowModalEintrag(false); delGetränk()}}/>
         </div>
     );
 }

@@ -18,6 +18,7 @@ export default function Kunde() {
         }).first();
         setName(kunde.name);
         setVorname(kunde.vorname);
+        setGeburtstag(kunde.geburtstag);
     }
 
     async function save() {
