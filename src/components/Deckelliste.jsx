@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 import { useNavigate } from "react-router-dom";
@@ -17,12 +17,12 @@ const Deckelliste = () => {
     const [getränke, setGetränke] = useState([]);
     const [currentKundenId, setCurrentKundenId] = useState(0);
     const [currentDeckelId, setCurrentDeckelId] = useState(0);
-
+    const geladen = useRef(false);
 
     // Funktionen
     const berechneGesamtsummeKunde = (kid) => {
         const filteredvl = deckelliste.filter((dck) => dck.kundenId === kid);
-        return filteredvl.reduce((sum, vl) => sum + vl.getränke.preis * vl.anzahl, 0);
+        return filteredvl.reduce((sum, vl) => sum + vl.preis * vl.anzahl, 0);
     }
 
     const incGetränk = async (id, anzahl) => {
@@ -47,6 +47,7 @@ const Deckelliste = () => {
 
     const löscheAlleDeckel = async () => {
         await db.deckel.clear();
+        ladeDaten();
     }
     
     const delGetränk = async () => {
@@ -69,7 +70,7 @@ const Deckelliste = () => {
         await alleKunden.map((k) => {
             index = dl.findIndex((el) => el.kundenId === k.id);
             if (index >= 0)
-                kmd.push(alleKunden[index]);
+                kmd.push(k);
         })
         return kmd;
     }
@@ -87,8 +88,8 @@ const Deckelliste = () => {
             const getränk = gl.find(g => g.id === eintrag.getränkId);
             return {
                 ...eintrag,
-                kundenName: kunde ? kunde.name : "Unbekannt",
-                getränkName: getränk ? getränk.name : "Unbekannt",
+                kundenName: kunde ? kunde.name + ' ' + kunde.vorname: "Unbekannt",
+                getränkName: getränk ? getränk.bezeichnung : "Unbekannt",
                 preis: getränk ? getränk.preis : 0
             };
         });
@@ -99,8 +100,10 @@ const Deckelliste = () => {
     };
 
     useEffect(() => {
-        ladeDaten();
         
+        if (geladen.current) return;
+        ladeDaten();
+        console.log("useEffect");
     },[]);
 
     return (
@@ -113,7 +116,87 @@ const Deckelliste = () => {
             <button className="btn btn-success btn-sm" onClick={löscheAlleDeckel}>
                 alle Löschen
             </button>
-            {kunden.map((ku) => {
+            {
+                deckelliste.map((d) => {
+                    return (
+                        <div key={d.kundenId} className="mt-2">
+                            <p className="">{d.kundenName}
+                                <button className="ms-2 btn border-primary rounded" onClick={() => navigate(`/deckel/${ku.id}`)}>+</button>
+                            </p>
+                            <table className="table table-bordered mt-2 border-primary p-1">
+                                <thead>
+                                    <tr>
+                                        <th>Artikel</th>
+                                        <th className="text-center">#</th>
+                                        <th className="text-end">€</th>
+                                        <th className="text-end">∑</th>
+                                        <th className="text-center">+1</th>
+                                        <th className="text-center">-1</th>
+                                        <th className="text-center">
+                                            {(screenSize ==="sm" || screenSize ==="xs" ) ? 
+                                                <i className="bi bi-x-square"></i> 
+                                                : 
+                                                <span>Löschen</span>}
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr key={d.id} className="p-2 border-b">
+                                        <td>{d.getränkName}</td> 
+                                        {d.anzahl >= 0 ? 
+                                            <>
+                                                <td className="text-center">{d.anzahl}</td>
+                                                <td className="text-end">{formatNumber(d.preis) }</td>
+                                                <td className="text-end">{formatNumber(d.preis * d.anzahl)}</td>
+                                            </> 
+                                            : 
+                                            <>
+                                                <td className="text-center text-danger">{d.anzahl}</td>
+                                                <td className="text-end text-danger">{formatNumber(d.preis) }</td>
+                                                <td className="text-end text-danger">{formatNumber(d.preis * d.anzahl)}</td>
+                                            </>}
+                                        <td className="text-center">
+                                            <button className="btn btn-primary" onClick={(e) => {e.preventDefault(); incGetränk(d.id, d.anzahl); }}>
+                                                +
+                                            </button>
+                                        </td>
+                                        <td className="text-center">
+                                            <button className="btn btn-primary"  onClick={(e) => {e.preventDefault(); decGetränk(d.id, d.anzahl);}}>
+                                                -
+                                            </button>
+                                        </td>
+                                        <td className="text-center">
+                                            <button className="bg-danger text-light btn btn-primary"  
+                                                onClick={() => {setCurrentDeckelId(d.id); setShowModalEintrag(true);}}>
+                                                {(screenSize ==="sm" || screenSize ==="xs" ) ? 
+                                                    <i className="bi bi-x-square"></i> 
+                                                    : <span>Löschen</span>}
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <td colSpan="3" className="text-end fw-bold">Gesamt:</td>
+                                        <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(d.kundenId) >= 0 ? "text-primary" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(d.kundenId))} €</td>
+                                        <td colSpan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td colSpan="4" className="text-end">
+                                            <button className="btn btn-primary"
+                                                onClick={() => {setCurrentKundenId(d.kundenId); setShowModalDeckel(true)}}>
+                                                Bezahlen
+                                            </button>
+                                        </td>
+                                        <td colSpan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    )
+                })
+            }
+            {/* {kunden.map((ku) => {
                 const einträge = deckelliste.filter(d => d.kundenId = ku.id)
                 if (einträge.length === 0) {
                     return null;
@@ -143,7 +226,7 @@ const Deckelliste = () => {
                                 </thead>
                                 <tbody>
                                     {einträge.map((eintrag) => {
-                                        const getränk = getränke.find ((g) => g.id = eintrag.getränkId)
+                                        const getränk = getränke.find ((g) => g.id === eintrag.getränkId)
                                         return (
                                                 <tr key={eintrag.id} className="p-2 border-b">
                                                     <td>{getränk ? getränk.bezeichnung : 'null'}</td> 
@@ -172,7 +255,6 @@ const Deckelliste = () => {
                                                     <td className="text-center">
                                                         <button className="bg-danger text-light btn btn-primary"  
                                                             onClick={() => {setCurrentDeckelId(eintrag.id); setShowModalEintrag(true);}}>
-                                                                 {/* if (window.confirm("Soll der Eintrag wirklich gelöscht werden?") === true) {e.preventDefault(); delGetränk(eintrag.id);}}}> */}
                                                             {(screenSize ==="sm" || screenSize ==="xs" ) ? 
                                                              <i className="bi bi-x-square"></i> 
                                                              : <span>Löschen</span>}
@@ -182,7 +264,7 @@ const Deckelliste = () => {
                                             );
                                         })}
                                 </tbody>
-                                {/* <tfoot>
+                                <tfoot>
                                     <tr>
                                         <td colSpan="3" className="text-end fw-bold">Gesamt:</td>
                                         <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(ku.id) >= 0 ? "text-dark" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(ku.id))} €</td>
@@ -197,12 +279,12 @@ const Deckelliste = () => {
                                         </td>
                                         <td colSpan="3"></td>
                                     </tr>
-                                </tfoot> */}
+                                </tfoot>
                             </table>
                         </div>
                     </div>
-            )}
                 )}
+            )} */}
             <Dialog show={showModalDeckel}
                 title='Achtung'
                 text='Wollen Sie wirklich bezahlen? Der Deckel wird dann gelöscht!'
