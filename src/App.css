@@ -5,6 +5,57 @@
   text-align: center;
 }
 
+.box {
+  width: 100px;
+  height: 100px;
+  background: blue;
+  
+}
+.box.active {
+    animation: colorChangeOnce 2s ease-in-out 1; /* Transition vorab definieren */
+}
+
+@keyframes colorChangeMinus {
+  0% {
+    color: white;
+  }
+  50% {
+    color: red;
+  }
+  100% {
+    color: white;
+  }
+}
+
+@keyframes colorChangePlus {
+  0% {
+    color: white;
+  }
+  50% {
+    color: blue;
+  }
+  100% {
+    color: white;
+  }
+}
+
+.animateTextColor {
+    color: white;
+}
+
+.animateTextColor.active {
+    animation: colorChangePlus 1s ease-in-out 0.5; /* Transition vorab definieren */
+}
+
+.animateTextColorMinus {
+    color: white;
+}
+
+.animateTextColorMinus.active {
+    animation: colorChangeMinus 1s ease-in-out 0.5; /* Transition vorab definieren */
+}
+
+
 .logo {
   height: 6em;
   padding: 1.5em;

@@ -7,6 +7,7 @@ import Kunde from "./components/Kunde";
 import Kunden from "./components/Kunden";
 import Deckelliste from "./components/Deckelliste";
 import Deckel from "./components/Deckel";
+import TestMotion from "./components/TestMotion";
 
 function App() {
     
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/kunde/:id" element={<Kunde />} />
                 <Route path="/deckelliste" element={<Deckelliste />} />
                 <Route path="/deckel/:kundenId" element={<Deckel />} />
+                <Route path="/test" element={<TestMotion />} />
             </Routes>
         </div>
     );

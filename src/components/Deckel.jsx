@@ -8,28 +8,42 @@ export default function Deckel() {
     // Der Deckel wird anhand der KundenId identifiziert. Dabei können einzelne Positionen anhand der id leicht ermittelt werden.
     const {kundenId} = useParams();
     const [deckelId, setDeckellisteId] = useState(0);
-    const [deckelliste, setDeckelliste] = useState([]);
+    // const [deckelliste, setDeckelliste] = useState([]);
     const [selectedKunde, setSelectedKunde] = useState(null);
-    const [kundenliste, setKundenListe] = useState([]);
+    const [kundenliste, setKundenliste] = useState([]);
     const [kunde, setKunde] = useState({name:'', vorname: '', geburtstag: ''});
     const [getränkeliste, setGetränkeliste] = useState([]);
     const [selectedGetränk, setSelectedGetränk] = useState([]);
     
+    const ladeKunden = async(d) => {
+        const k = await db.kunden.toArray();
+        const kundenOhneDeckel = k.filter(kunde =>
+            !d.some(deckel => deckel.kundenId === kunde.id)
+        );
+        setKundenliste(kundenOhneDeckel);
+    }
+
+    const ladeGetränke = async(d) => {
+        const g = await db.getränke.toArray();
+        const getränkeNichtAufDeckel = g.filter(getränk =>
+            !d.some(deckel => deckel.getränkId === getränk.id)
+        );
+        setGetränkeliste(getränkeNichtAufDeckel);
+    }
+
+    // Hier brauch ich keine Kundenliste nur den Kunden.
     const ladeDeckel = async (kid) => {
         const d = await db.deckel.where("kundenId").equals(kid).toArray();
-        setDeckelliste(d);
         const k = await db.kunden.where("id").equals(kid).first();
         setKunde(k);
         const g = await db.getränke.toArray();
-        setGetränkeliste(g);
+        await ladeGetränke(d);
 
     }
 
     const ladeDatenFürNeuenDeckel = async () => {
         const d = await db.deckel.toArray();
-        setDeckelliste(d);
-        const k = await db.kunden.toArray();
-        setKundenListe(k);
+        await ladeKunden(d);
         const g = await db.getränke.toArray();
         setGetränkeliste(g);
     }
@@ -72,6 +86,7 @@ export default function Deckel() {
                     <div>
                         <p><select
                                 className="form-select bg-secondary"
+                                required
                                 value={selectedGetränk}
                                 onChange={(e) => setSelectedGetränk(e.target.value)}
                             >
@@ -88,6 +103,7 @@ export default function Deckel() {
                     <div>
                         <p><select
                                 className="form-select bg-secondary"
+                                required
                                 value={selectedKunde}
                                 onChange={(e) => setSelectedKunde(e.target.value)}
                             >
@@ -101,6 +117,7 @@ export default function Deckel() {
                         </p>
                         <p><select
                                 className="form-select bg-secondary"
+                                required
                                 value={selectedGetränk}
                                 onChange={(e) => setSelectedGetränk(e.target.value)}
                             >
