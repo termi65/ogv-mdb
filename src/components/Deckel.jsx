@@ -63,7 +63,14 @@ export default function Deckel() {
                 await db.deckel.add({kundenId:parseFloat(kundenId), getränkId: parseFloat(selectedGetränk), anzahl:1});
                 
             } else {
-                await db.deckel.add({kundenId: parseFloat(selectedKunde), getränkId: parseFloat(selectedGetränk), anzahl:1});
+                // Falls kein Kunde ausgewählt wurde (mit selecedKunde) wird ein neuer Kunde mit Namen Kunde[N] angelegt, wobei N = max(#unbekannte Kunden)+1
+                if (!selectedKunde) {
+                    const Unbekannte = await db.kunden.where("name").equals("Kunde").toArray();
+                    const ind = Unbekannte.length + 1;
+                    const kid = await db.kunden.add({name: "Kunde", vorname: ind.toString(), geburtstag: 0});
+                    db.deckel.add({kundenId: kid, getränkId: parseFloat(selectedGetränk), anzahl:1});
+                } else
+                    await db.deckel.add({kundenId: parseFloat(selectedKunde), getränkId: parseFloat(selectedGetränk), anzahl:1});
             }
         }
         catch(error) {
@@ -103,11 +110,10 @@ export default function Deckel() {
                     <div>
                         <p><select
                                 className="form-select bg-secondary"
-                                required
                                 value={selectedKunde}
                                 onChange={(e) => setSelectedKunde(e.target.value)}
                             >
-                                <option value="">Kunde auswählen</option>
+                                <option value="">Kunde auswählen (nichts auswählen, falls Kunde unbekannt!)</option>
                                 {kundenliste.map((m) => (
                                     <option className="bg-info" key={m.id} value={m.id}>
                                         {m.name} {m.vorname}

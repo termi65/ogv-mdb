@@ -5,16 +5,6 @@
   text-align: center;
 }
 
-.box {
-  width: 100px;
-  height: 100px;
-  background: blue;
-  
-}
-.box.active {
-    animation: colorChangeOnce 2s ease-in-out 1; /* Transition vorab definieren */
-}
-
 @keyframes colorChangeMinus {
   0% {
     color: white;

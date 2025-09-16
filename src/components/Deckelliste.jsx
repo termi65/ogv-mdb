@@ -1,3 +1,7 @@
+// ToDo:
+//      1) Einen neuen Deckel mit einem unbekannten Kunden aufnehmen evtl. mit Bild?
+//      2) Die Animation beim Inkrementieren und Dekrementieren wird bei allen Kunden angezeigt. Das muss auf eine Zeile begrenzt werden!
+
 import { useEffect, useRef, useState } from "react";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
@@ -8,29 +12,31 @@ import formatNumber from "../utils/formatNumber";
 const Deckelliste = () => {
     const screenSize = useScreenSize();
     const navigate = useNavigate();
+    const geladen = useRef(false);
     
     // Für die modalen Dialog relevanten Variablen
     const [showModalDeckel, setShowModalDeckel] = useState(false);
     const [showModalEintrag, setShowModalEintrag] = useState(false);
     const [deckelliste, setDeckelliste] = useState([]);
-    const [kunden, setKunden] = useState([]);
-    const [getränke, setGetränke] = useState([]);
+    const [kundenMitDeckel, setKundenMitDeckel] = useState([]);
     const [currentKundenId, setCurrentKundenId] = useState(0);
     const [currentDeckelId, setCurrentDeckelId] = useState(0);
-    const geladen = useRef(false);
-    const [animateTextColor, setAnimateTextColor] = useState(false);
     const [classOfNumber, setClassOfNumber] = useState("animateTextColor")
-    
-    const triggerAnimation = (operator) =>{
-        // setAnimateTextColor(false);
-        // setTimeout(() => {setAnimateTextColor(true)}, 20);
-        if (operator === "plus") {
-            setClassOfNumber("animateTextColor");
-            setTimeout(() => {setClassOfNumber("animateTextColor active")}, 20);
-        } else {
-            setClassOfNumber("animateTextColorMinus");
-            setTimeout(() => {setClassOfNumber("animateTextColorMinus active")}, 20);
-        }
+    const [animationStates, setAnimationStates] = useState({});
+
+    // wir triggeren nur den Eintrag mit der übergebenen ID
+    const triggerAnimation = (id, operator) =>{
+        setAnimationStates((prev) => ({
+            ...prev,
+            [id]: operator === "plus" ? "animateTextColor" : "animateTextColorMinus",
+        }));
+
+        setTimeout(() => {
+            setAnimationStates((prev) => ({
+                ...prev,
+                [id]: operator === "plus" ? "animateTextColor active" : "animateTextColorMinus active",
+            }));
+        }, 20);
     }
 
     // Funktionen
@@ -43,7 +49,7 @@ const Deckelliste = () => {
         try {
             await db.deckel.update(id, {anzahl: anzahl+1});
             ladeDaten();
-            triggerAnimation('plus');
+            triggerAnimation(id, 'plus');
         }
         catch (error) {
             alert("Fehler! " + error);
@@ -54,20 +60,19 @@ const Deckelliste = () => {
         try {
             await db.deckel.update(id, {anzahl: anzahl-1});
             ladeDaten();
-            triggerAnimation('minus');
+            triggerAnimation(id, 'minus');
         }
         catch (error) {
             alert("Fehler! " + error);
         }
     }
 
-    const löscheAlleDeckel = async () => {
-        await db.deckel.clear();
-        ladeDaten();
-    }
-    
     const deleteDeckel = async () => {
         try {
+            const kunde = await db.kunden.where("id").equals(currentKundenId).first();
+            if (kunde.name==="Kunde"){
+                await db.kunden.where("id").equals(currentKundenId).delete();
+            }
             await db.deckel
                 .where("kundenId")
                 .equals(currentKundenId)
@@ -79,6 +84,7 @@ const Deckelliste = () => {
         }
     }
 
+    // Falls es das einzige Getränk des Kunden ist wird der Deckel gelöscht!
     const delGetränk = async () => {
         try {
             await db.deckel
@@ -92,13 +98,13 @@ const Deckelliste = () => {
         }
     }
 
-    const kundenMitDeckel = async(dl) => {
+    const getKundenMitDeckel = async(dl) => {
         const alleKunden = await db.kunden.toArray();
         alleKunden.sort((a,b) => {
             const aName = a.name;
             const bName = b.name;
             if (aName < bName) return -1;
-            if (aName > bName) return -1;
+            if (aName > bName) return 1;
             return 0;
         })
         let kmd = [];
@@ -113,7 +119,7 @@ const Deckelliste = () => {
 
     const ladeDaten = async () => {
         const dl = await db.deckel.toArray();
-        const kl = await kundenMitDeckel(dl);
+        const kl = await getKundenMitDeckel(dl);
         const gl = await db.getränke.toArray();
         
         const dlMitNamen = dl.map(eintrag => {
@@ -128,12 +134,10 @@ const Deckelliste = () => {
             };
         });
         setDeckelliste(dlMitNamen);
-        setKunden(kl);
-        setGetränke(gl);
+        setKundenMitDeckel(kl);
     };
 
     useEffect(() => {
-        
         if (geladen.current) return;
         ladeDaten();
         console.log("useEffect");
@@ -148,10 +152,10 @@ const Deckelliste = () => {
             </h2>
             <hr />
             {
-                kunden.map((k) => {
+                kundenMitDeckel.map((k) => {
                     return (
                         <div key={k.id} className="mt-2">
-                            <p className="">{k.name}
+                            <p className="">{k.name} {k.vorname}
                                 <button className="ms-2 btn border-primary rounded" onClick={() => navigate(`/deckel/${k.id}`)}>+</button>
                             </p>
                             <table className="table table-bordered mt-2 border-primary p-1">
@@ -160,7 +164,7 @@ const Deckelliste = () => {
                                         <th>Artikel</th>
                                         <th className="text-center">#</th>
                                         <th className="text-end">€</th>
-                                        <th className="text-end">∑</th>
+                                        <th className="text-end">∑ (€)</th>
                                         <th className="text-center">+1</th>
                                         <th className="text-center">-1</th>
                                         <th className="text-center">
@@ -173,6 +177,7 @@ const Deckelliste = () => {
                                 </thead>
                                 <tbody>
                                     {deckelliste.filter((dck) => dck.kundenId === k.id).map((d) => {
+                                        const classOfNumber = animationStates[d.id] || "";
                                         return (
                                             <tr key={d.id} className="p-2 border-b">
                                                 <td>{d.getränkName}</td> 
@@ -207,8 +212,7 @@ const Deckelliste = () => {
                                                 <td className="text-center">
                                                     <button className="btn btn-primary"  onClick={(e) => {
                                                             e.preventDefault(); 
-                                                            decGetränk(d.id, d.anzahl); 
-                                                            triggerAnimation();}}>
+                                                            decGetränk(d.id, d.anzahl);}}>
                                                         -
                                                     </button>
                                                 </td>
@@ -226,7 +230,7 @@ const Deckelliste = () => {
                                 <tfoot>
                                     <tr>
                                         <td colSpan="3" className="text-end fw-bold">Gesamt:</td>
-                                        <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(k.id) >= 0 ? "text-primary" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(k.id))} €</td>
+                                        <td className={`text-end fw-bolder ${berechneGesamtsummeKunde(k.id) >= 0 ? "text-primary" : "text-danger"}`}>{formatNumber(berechneGesamtsummeKunde(k.id))}</td>
                                         <td colSpan="3"></td>
                                     </tr>
                                     <tr>
