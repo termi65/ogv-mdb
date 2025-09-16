@@ -84,14 +84,23 @@ const Deckelliste = () => {
         }
     }
 
-    // Falls es das einzige Getränk des Kunden ist wird der Deckel gelöscht!
     const delGetränk = async () => {
+        console.log("Kunden-ID:");
+        console.log(currentKundenId);
         try {
-            await db.deckel
-                .where("id")
-                .equals(currentDeckelId)
-                .delete();
-            ladeDaten();
+            const deck = await db.deckel
+                .where("kundenId")
+                .equals(currentKundenId).toArray();
+            // Falls es nur einen Eintrag für diesen Kunden gibt, muss der Deckel gelöscht werden!
+            if (deck.length === 1) {
+                deleteDeckel();
+            } else {
+                await db.deckel
+                    .where("id")
+                    .equals(currentDeckelId)
+                    .delete();
+                ladeDaten();
+            }
         }
         catch (error) {
             alert("Fehler! " + error);
@@ -218,7 +227,7 @@ const Deckelliste = () => {
                                                 </td>
                                                 <td className="text-center">
                                                     <button className="bg-danger text-light btn btn-primary"  
-                                                        onClick={() => {setCurrentDeckelId(d.id); setShowModalEintrag(true);}}>
+                                                        onClick={() => {setCurrentDeckelId(d.id); setCurrentKundenId(k.id); setShowModalEintrag(true);}}>
                                                         {(screenSize ==="sm" || screenSize ==="xs" ) ? 
                                                             <i className="bi bi-x-square"></i> 
                                                             : <span>Löschen</span>}

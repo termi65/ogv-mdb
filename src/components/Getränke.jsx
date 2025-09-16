@@ -3,9 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { db } from "../db";
 import useScreenSize from "../utils/useScreenSize";
 import formatNumber from "../utils/formatNumber";
+import Dialog from "./Dialog";
 
 export default function Getränke() {
+    const [showModalEintrag, setShowModalEintrag] = useState(false);
     const [getränke, setGetränke] = useState([]);
+    const [currentGetränkeId, setCurrentGetränkeId] = useState(-1);
     const navigate = useNavigate();
     const screenSize = useScreenSize();
 
@@ -23,8 +26,8 @@ export default function Getränke() {
         navigate(`/getraenk/${id}`);
     }
 
-     async function deleteGetränk(id) {
-        await db.getränke.delete(id);
+     async function deleteGetränk() {
+        await db.getränke.delete(currentGetränkeId);
         loadGetränke();
     }
 
@@ -81,7 +84,7 @@ export default function Getränke() {
                                 {screenSize ==="sm" || screenSize ==="xs" ? 
                                     <td className="text-center">
                                         <button type="button" className="btn bg-danger text-light"
-                                            onClick={() => deleteGetränk(getränk.id)}>
+                                            onClick={() => {setCurrentGetränkeId(Number(getränk.id)); setShowModalEintrag(true);}}>
                                             <i className="bi bi-x-square"></i>
                                         </button>
                                         
@@ -89,7 +92,7 @@ export default function Getränke() {
                                     :
                                     <td className="text-center">
                                     <button type="button" className="btn bg-danger text-light"
-                                        onClick={() => deleteGetränk(getränk.id)}>
+                                        onClick={() => {setCurrentGetränkeId(Number(getränk.id)); setShowModalEintrag(true);}}>
                                         Löschen
                                     </button>
                                 </td>
@@ -99,6 +102,12 @@ export default function Getränke() {
                     }
                     </tbody>
                 </table>
+                <Dialog show={showModalEintrag}
+                    title='Achtung'
+                    text='Soll das Getränk wirklich gelöscht werden?'
+                    nurOK={false}
+                    handleClose={() => setShowModalEintrag(false)}
+                    handleOK={() => {setShowModalEintrag(false); deleteGetränk()}}/>
             </div>
     )
 }

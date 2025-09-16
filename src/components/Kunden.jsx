@@ -2,9 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "../db";
 import useScreenSize from "../utils/useScreenSize";
+import Dialog from "./Dialog";
 
 export default function Kunden() {
+    const [showModalEintrag, setShowModalEintrag] = useState(false);
     const [kunden, setKunden] = useState([]);
+    const [currentKundenId, setCurrentKundenId] = useState(-1);
     const navigate = useNavigate();
     const screenSize = useScreenSize();
 
@@ -22,15 +25,15 @@ export default function Kunden() {
         navigate(`/kunde/${id}`);
     }
 
-     async function deleteKunde(id) {
+    async function deleteKunde() {
         const findDeckel = await db.deckel.where({
-            kundenId: id}).first();
+            kundenId: currentKundenId}).first();
         
         if (findDeckel){
             alert("Deckel vorhanden. Kann Kunden nicht löschen!");
         } else {
             console.log("Keine Deckel vorhanden - Kunde wird gelöscht!");
-            await db.kunden.delete(id);
+            await db.kunden.delete(currentKundenId);
             loadKunden();
         }
     }
@@ -90,7 +93,7 @@ export default function Kunden() {
                             {screenSize ==="sm" || screenSize ==="xs" ? 
                                 <td className="text-center">
                                     <button type="button" className="btn bg-danger text-light"
-                                        onClick={() => deleteKunde(kunde.id)}>
+                                        onClick={() => {setCurrentKundenId(Number(kunde.id)); setShowModalEintrag(true); }}>
                                         <i className="bi bi-x-square"></i>
                                     </button>
                                     
@@ -98,7 +101,7 @@ export default function Kunden() {
                                 :
                                 <td className="text-center">
                                 <button type="button" className="btn bg-danger text-light"
-                                    onClick={() => deleteKunde(kunde.id)}>
+                                    onClick={() => {setCurrentKundenId(Number(kunde.id)); setShowModalEintrag(true); }}>
                                     Löschen
                                 </button>
                             </td>
@@ -108,6 +111,13 @@ export default function Kunden() {
                 }
                 </tbody>
             </table>
+            <Dialog show={showModalEintrag}
+                title='Achtung'
+                text='Soll der Kunde wirklich gelöscht werden?'
+                nurOK={false}
+                handleClose={() => setShowModalEintrag(false)}
+                handleOK={() => {setShowModalEintrag(false); deleteKunde()}}/>
+
         </div>
     );
 }

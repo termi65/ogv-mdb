@@ -1,14 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
 import { db } from "../db";
 import formatNumber from "../utils/formatNumber";
 
 export default function Deckel() {
+    const inputRef = useRef(null);
     const navigate = useNavigate();
     // Der Deckel wird anhand der KundenId identifiziert. Dabei können einzelne Positionen anhand der id leicht ermittelt werden.
     const {kundenId} = useParams();
-    const [deckelId, setDeckellisteId] = useState(0);
-    // const [deckelliste, setDeckelliste] = useState([]);
     const [selectedKunde, setSelectedKunde] = useState(null);
     const [kundenliste, setKundenliste] = useState([]);
     const [kunde, setKunde] = useState({name:'', vorname: '', geburtstag: ''});
@@ -36,7 +35,6 @@ export default function Deckel() {
         const d = await db.deckel.where("kundenId").equals(kid).toArray();
         const k = await db.kunden.where("id").equals(kid).first();
         setKunde(k);
-        const g = await db.getränke.toArray();
         await ladeGetränke(d);
 
     }
@@ -54,6 +52,7 @@ export default function Deckel() {
         } else {
             ladeDatenFürNeuenDeckel();
         }
+        inputRef.current.focus(); 
     },[]);
     
     // Beim Verzehr wird nur hinzugefügt (ein komplett neuer Deckel oder auf dem Deckel ein neues Getränk!).
@@ -79,6 +78,16 @@ export default function Deckel() {
         
     }
 
+    const handleKeyDown = (event) => {
+        if (event.key === 'Escape') {
+            event.preventDefault();
+            goBack();
+        } 
+    };
+    
+    const goBack = () => {
+        navigate("/deckelliste");
+    }
     const handleSubmit = async (e) => {
         e.preventDefault();
         await insertDeckel();
@@ -86,12 +95,12 @@ export default function Deckel() {
         };
 
     return (
-        <div className="container mt-4">
-            <h2>{(kundenId != "0") ? `Deckel von ${kunde.name} , ${kunde.vorname}` : "Neuer Deckel"}</h2>
+        <div className="container mt-4" onKeyDown={handleKeyDown}>
+            <h2 className="text-info bg-dark p-2 text-center">{(kundenId != "0") ? `Deckel von ${kunde.name} , ${kunde.vorname}` : "Neuer Deckel"}</h2>
             <form onSubmit={handleSubmit}>
                 {(kundenId != "0")  ? 
                     <div>
-                        <p><select
+                        <p><select ref={inputRef}
                                 className="form-select bg-secondary"
                                 required
                                 value={selectedGetränk}
@@ -108,10 +117,11 @@ export default function Deckel() {
                     </div>
                     :
                     <div>
-                        <p><select
+                        <p><select ref={inputRef}
                                 className="form-select bg-secondary"
                                 value={selectedKunde}
                                 onChange={(e) => setSelectedKunde(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             >
                                 <option value="">Kunde auswählen (nichts auswählen, falls Kunde unbekannt!)</option>
                                 {kundenliste.map((m) => (
@@ -121,11 +131,12 @@ export default function Deckel() {
                                 ))}
                             </select>
                         </p>
-                        <p><select
+                        <p><select 
                                 className="form-select bg-secondary"
                                 required
                                 value={selectedGetränk}
                                 onChange={(e) => setSelectedGetränk(e.target.value)}
+                                onKeyDown={handleKeyDown}
                             >
                                 <option value="">Getränk auswählen</option>
                                 {getränkeliste.map((g) => (
@@ -141,14 +152,14 @@ export default function Deckel() {
                     <div className="row gx-1">
                         <div className="col">
                             <div className="p-1">
-                                <button type="submit" className="w-100 rounded btn btn-primary">
+                                <button className="w-100 rounded btn btn-primary">
                                     Speichern
                                 </button>
                             </div>
                         </div>
                         <div className="col">
                             <div className="p-1">
-                                <button className="w-100 rounded btn btn-primary" onClick={() => navigate("/deckelliste")}>
+                                <button className="w-100 rounded btn btn-primary" onClick={goBack}>
                                     Abbrechen
                                 </button>
                             </div>
