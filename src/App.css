@@ -5,6 +5,27 @@
   text-align: center;
 }
 
+/*A Für die Testseite */
+.box {
+    background-color: white;
+}
+.box.active {
+    animation: backColor 3s ease-in-out 0.5;
+}
+
+@keyframes backColor {
+    0% {
+        background-color: white;
+    }
+    50% {
+        background-color: red;
+    }
+    100% {
+        background-color: white;
+    }
+}
+/*E Für die Testseite */
+
 @keyframes colorChangeMinus {
   0% {
     color: white;

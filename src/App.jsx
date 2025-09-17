@@ -10,8 +10,6 @@ import Deckel from "./components/Deckel";
 import TestMotion from "./components/TestMotion";
 
 function App() {
-    
-
     return (
         <div>
             <Navbar />
