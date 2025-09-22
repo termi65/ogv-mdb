@@ -8,8 +8,8 @@ export default defineConfig({
             registerType: 'autoUpdate',
             includeAssets: ['favicon.svg', 'robots.txt'],
             manifest: {
-                name: 'Meine Vite PWA',
-                short_name: 'VitePWA',
+                name: 'OGV-MDB',
+                short_name: 'OGV-MDB',
                 start_url: '/',
                 display: 'standalone',
                 background_color: '#ffffff',

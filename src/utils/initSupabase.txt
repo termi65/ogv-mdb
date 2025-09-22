@@ -1,0 +1,24 @@
+/* Erstellt alle PostgreSql-Tabellen für supabase neu */
+drop table getränke;
+drop table deckel;
+drop table kunden;
+
+create table kunden (
+  id bigint GENERATED ALWAYS AS IDENTITY primary key,
+  name text,
+  vorname text,
+  geburtstag text
+);
+
+create table deckel (
+  id bigint GENERATED ALWAYS AS IDENTITY primary key,
+  kundenId bigint,
+  getränkId bigint,
+  anzahl decimal
+);
+
+create table getränke (
+  id bigint GENERATED ALWAYS AS IDENTITY primary key,
+  bezeichnung text,
+  preis float
+);

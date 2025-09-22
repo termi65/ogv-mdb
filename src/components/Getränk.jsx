@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import { db } from "../db";
+import { db } from "../utils/db";
 
 export default function Getränk() {
     const inputRef = useRef(null);

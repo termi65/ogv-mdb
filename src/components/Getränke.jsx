@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../db";
+
 import useScreenSize from "../utils/useScreenSize";
 import formatNumber from "../utils/formatNumber";
 import Dialog from "./Dialog";
+
+import * as mdb from "../utils/dbfunctions";
 
 export default function Getränke() {
     const [showModalEintrag, setShowModalEintrag] = useState(false);
@@ -18,7 +20,7 @@ export default function Getränke() {
     },[])
     
     async function loadGetränke() {
-        const allGetraenke = await db.getränke.toArray();
+        const allGetraenke = await mdb.ladeGetränke();
         setGetränke(allGetraenke); 
     }
 
@@ -26,8 +28,8 @@ export default function Getränke() {
         navigate(`/getraenk/${id}`);
     }
 
-     async function deleteGetränk() {
-        await db.getränke.delete(currentGetränkeId);
+    async function deleteGetränk() {
+        await mdb.deleteGetränk(currentGetränkeId);
         loadGetränke();
     }
 

@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../db";
+import { db } from "../utils/db";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
+
+import * as mdb from "../utils/dbfunctions";
 
 export default function Kunden() {
     const [showModalEintrag, setShowModalEintrag] = useState(false);
@@ -17,7 +19,7 @@ export default function Kunden() {
     },[])
     
     async function loadKunden() {
-        const alleKunden = await db.kunden.toArray();
+        const alleKunden = await mdb.ladeKunden();
         setKunden(alleKunden); 
     }
 

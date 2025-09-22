@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 import { useNavigate } from "react-router-dom";
-import { db } from "../db";
+import { db } from "../utils/db";
 import formatNumber from "../utils/formatNumber";
 
 const Deckelliste = () => {
