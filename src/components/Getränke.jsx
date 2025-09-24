@@ -28,8 +28,8 @@ export default function Getränke() {
         navigate(`/getraenk/${id}`);
     }
 
-    async function deleteGetränk() {
-        await mdb.deleteGetränk(currentGetränkeId);
+    async function löscheGetränk() {
+        await mdb.löscheGetränk(currentGetränkeId);
         loadGetränke();
     }
 
@@ -109,7 +109,7 @@ export default function Getränke() {
                     text='Soll das Getränk wirklich gelöscht werden?'
                     nurOK={false}
                     handleClose={() => setShowModalEintrag(false)}
-                    handleOK={() => {setShowModalEintrag(false); deleteGetränk()}}/>
+                    handleOK={() => {setShowModalEintrag(false); löscheGetränk()}}/>
             </div>
     )
 }

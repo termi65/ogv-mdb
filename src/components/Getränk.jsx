@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import { db } from "../utils/db";
+import * as mdb from "../utils/dbfunctions";
 
 export default function Getränk() {
     const inputRef = useRef(null);
@@ -10,18 +10,15 @@ export default function Getränk() {
     const {id} = useParams();
     const navigate = useNavigate()
     
-    async function ladeGetränk(db_id) {
-        const getränk = await db.getränke.where({
-            id: db_id
-        }).first();
+    async function ladeGetränk(id) {
+        const getränk = await mdb.ladeGetränk(id);
         setBezeichnung(getränk.bezeichnung);
         setPreis(getränk.preis);
     }
 
     async function save() {
         try {
-            if (currentId != 0) await db.getränke.update(currentId, {bezeichnung:bezeichnung, preis: parseFloat(preis)})
-            else await db.getränke.add({bezeichnung:bezeichnung, preis: parseFloat(preis)})
+            await mdb.speichereGetränk(currentId, bezeichnung, parseFloat(preis))
         }
         catch {
             alert("Fehler beim Speichern!");

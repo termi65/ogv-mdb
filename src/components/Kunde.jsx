@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import { db } from "../utils/db";
+import * as mdb from "../utils/dbfunctions";
 
 export default function Kunde() {
     
@@ -13,23 +13,15 @@ export default function Kunde() {
     const navigate = useNavigate()
     const inputRef = useRef(null);
     
-    async function ladeKunde(db_id) {
-        const kunde = await db.kunden.where({
-            id: db_id
-        }).first();
+    async function ladeKunde(id) {
+        const kunde = mdb.ladeKunde(id);
         setName(kunde.name);
         setVorname(kunde.vorname);
         setGeburtstag(kunde.geburtstag);
     }
 
     async function save() {
-        try {
-            if (currentId != 0) await db.kunden.update(currentId, {name:name, vorname: vorname, geburtstag: geburtstag})
-            else await db.kunden.add({name:name, vorname: vorname, geburtstag: geburtstag})
-        }
-        catch {
-            alert("Fehler beim Speichern!");
-        }
+        mdb.speichereKunde(currentId, name, vorname, geburtstag);
         navigate("/kunden");
     }
 

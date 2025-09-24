@@ -6,8 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 import { useNavigate } from "react-router-dom";
-import { db } from "../utils/db";
 import formatNumber from "../utils/formatNumber";
+import * as mdb from "../utils/dbfunctions";
 
 const Deckelliste = () => {
     const screenSize = useScreenSize();
@@ -21,10 +21,9 @@ const Deckelliste = () => {
     const [kundenMitDeckel, setKundenMitDeckel] = useState([]);
     const [currentKundenId, setCurrentKundenId] = useState(0);
     const [currentDeckelId, setCurrentDeckelId] = useState(0);
-    const [classOfNumber, setClassOfNumber] = useState("animateTextColor")
     const [animationStates, setAnimationStates] = useState({});
 
-    // wir triggeren nur den Eintrag mit der übergebenen ID
+    // wir triggern nur den Eintrag mit der übergebenen ID
     const triggerAnimation = (id, operator) =>{
         setAnimationStates((prev) => ({
             ...prev,
@@ -46,92 +45,39 @@ const Deckelliste = () => {
     }
 
     const incGetränk = async (id, anzahl) => {
-        try {
-            await db.deckel.update(id, {anzahl: anzahl+1});
-            ladeDaten();
-            triggerAnimation(id, 'plus');
-        }
-        catch (error) {
-            alert("Fehler! " + error);
-        }
+        await mdb.ändereAnzahl(id, anzahl+1);
+        await ladeDaten();
+        triggerAnimation(id, 'plus');
     }
 
     const decGetränk = async (id, anzahl) => {
-        try {
-            await db.deckel.update(id, {anzahl: anzahl-1});
-            ladeDaten();
-            triggerAnimation(id, 'minus');
-        }
-        catch (error) {
-            alert("Fehler! " + error);
-        }
+        await mdb.ändereAnzahl(id, anzahl-1);
+        await ladeDaten();
+        triggerAnimation(id, 'minus');
     }
 
     const deleteDeckel = async () => {
-        try {
-            const kunde = await db.kunden.where("id").equals(currentKundenId).first();
-            if (kunde.name==="Kunde"){
-                await db.kunden.where("id").equals(currentKundenId).delete();
-            }
-            await db.deckel
-                .where("kundenId")
-                .equals(currentKundenId)
-                .delete();
-            ladeDaten();
-        }
-        catch (error) {
-            alert("Fehler! " + error);
-        }
+        await mdb.löscheDeckel(currentKundenId);
+        ladeDaten();
+        
     }
 
     const delGetränk = async () => {
-        console.log("Kunden-ID:");
-        console.log(currentKundenId);
         try {
-            const deck = await db.deckel
-                .where("kundenId")
-                .equals(currentKundenId).toArray();
-            // Falls es nur einen Eintrag für diesen Kunden gibt, muss der Deckel gelöscht werden!
-            if (deck.length === 1) {
-                deleteDeckel();
-            } else {
-                await db.deckel
-                    .where("id")
-                    .equals(currentDeckelId)
-                    .delete();
-                ladeDaten();
-            }
+            await mdb.löscheDeckelGetränk(currentDeckelId, currentKundenId);
         }
         catch (error) {
             alert("Fehler! " + error);
         }
     }
 
-    const getKundenMitDeckel = async(dl) => {
-        const alleKunden = await db.kunden.toArray();
-        alleKunden.sort((a,b) => {
-            const aName = a.name;
-            const bName = b.name;
-            if (aName < bName) return -1;
-            if (aName > bName) return 1;
-            return 0;
-        })
-        let kmd = [];
-        let index = -1;
-        await alleKunden.map((k) => {
-            index = dl.findIndex((el) => el.kundenId === k.id);
-            if (index >= 0)
-                kmd.push(k);
-        })
-        return kmd;
-    }
-
     const ladeDaten = async () => {
-        const dl = await db.deckel.toArray();
-        const kl = await getKundenMitDeckel(dl);
-        const gl = await db.getränke.toArray();
+        const dl = await mdb.ladeDeckel();
+        const kl = await mdb.ladeKundenMitDeckel(dl);
+        const gl = await mdb.ladeGetränke();
         
         const dlMitNamen = dl.map(eintrag => {
+            // Den Kunden ermitteln
             const kunde = kl.find(k => k.id === eintrag.kundenId);
             // ich brauch für diesen Deckel alle Getränke nicht nur einen!
             const getränk = gl.find(g => g.id === eintrag.getränkId);

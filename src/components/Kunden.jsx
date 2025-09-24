@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { db } from "../utils/db";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 
@@ -28,14 +27,13 @@ export default function Kunden() {
     }
 
     async function deleteKunde() {
-        const findDeckel = await db.deckel.where({
-            kundenId: currentKundenId}).first();
+        const findDeckel = await mdb.deckelMitKundenId(currentKundenId);
         
-        if (findDeckel){
+        if (findDeckel.length > 0){
             alert("Deckel vorhanden. Kann Kunden nicht löschen!");
         } else {
             console.log("Keine Deckel vorhanden - Kunde wird gelöscht!");
-            await db.kunden.delete(currentKundenId);
+            await mdb.löscheKunde(currentKundenId);
             loadKunden();
         }
     }
