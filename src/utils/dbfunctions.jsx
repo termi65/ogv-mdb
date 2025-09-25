@@ -15,6 +15,7 @@ export const ladeGetränk = db.ladeGetränk;
 export const ladeKunden = db.ladeKunden;
 export const ladeKunde = db.ladeKunde;
 export const ladeKundenMitDeckel = db.ladeKundenMitDeckel;
+export const ladeKundenDeckel = db.ladeKundenDeckel;
 
 export const speichereDeckel = db.speichereDeckel;
 export const speichereGetränk = db.speichereGetränk;
@@ -26,5 +27,5 @@ export const löscheGetränk = db.löscheGetränk;
 export const löscheKunde = db.löscheKunde;
 // Spezialfunktionen
 export const ändereAnzahl = db.ändereAnzahl;
-export const deckelMitKundenId = db.deckelMitKundenId;
+export const deckelMitKundenIdExistiert = db.deckelMitKundenIdExistiert;
 

@@ -27,9 +27,9 @@ export default function Kunden() {
     }
 
     async function deleteKunde() {
-        const findDeckel = await mdb.deckelMitKundenId(currentKundenId);
+        const findDeckel = await mdb.deckelMitKundenIdExistiert(currentKundenId);
         
-        if (findDeckel.length > 0){
+        if (findDeckel){
             alert("Deckel vorhanden. Kann Kunden nicht löschen!");
         } else {
             console.log("Keine Deckel vorhanden - Kunde wird gelöscht!");

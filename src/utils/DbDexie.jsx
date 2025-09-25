@@ -25,7 +25,8 @@ export async function ladeKunden () {
 export async function  ladeKunde(id) {
     const kunde = await db
         .kunden
-        .where({ id: id })
+        .where("id")
+        .equals(id)
         .first();
     return kunde;
 }
@@ -50,28 +51,53 @@ export async function ladeKundenMitDeckel(dl) {
     return kmd;
 }
 
+export async function  ladeKundenDeckel(kid) {
+    const deckel = await db
+        .deckel
+        .where({ kundenId: kid }).toArray();
+    return deckel;
+}
+
 export async function speichereDeckel(kundenId, getränkId) {
-    const response = await db.deckel.insert({kundenId: kundenId, getränkId: getränkId, anzahl: 1});
+    const response = await db
+        .deckel
+        .add({kundenId: kundenId, getränkId: getränkId, anzahl: 1});
     return response;
 }
 
 export async function speichereGetränk (id, bezeichnung, preis) {
-    let response;
-    if (id === 0) {
-        response = await db.getränke.insert({bezeichnung:bezeichnung, preis: preis});
-    } else {
-        response = await db.getränke.update(id, {bezeichnung:bezeichnung, preis: preis});
+    try {
+        let response;
+        if (id === 0) {
+            response = await db.getränke.add({ bezeichnung:bezeichnung, preis: preis });
+            console.log("add result:", response);
+        } else {
+            response = await db.getränke.update(id, { bezeichnung:bezeichnung, preis: preis });
+            console.log("update result:", response);
+        }
+
+        console.log("vor return:", response);
+        return response;
+    } catch (err) {
+        console.error("Fehler in speichereGetränk:", err);
+        throw err; // weiterwerfen, falls du den Fehler oben sehen willst
     }
-    return response;
 }
 
 export async function speichereKunde(id, name, vorname, geburtstag) {
+    let retValue;
     try {
-        if (id != 0) await db.kunden.update(id, {name:name, vorname: vorname, geburtstag: geburtstag})
-        else await db.kunden.add({name:name, vorname: vorname, geburtstag: geburtstag})
+        if (id != 0) {
+            await db.kunden.update(id, {name:name, vorname: vorname, geburtstag: geburtstag})
+            retValue = id;
+        } else {
+            retValue = await db.kunden.add({name:name, vorname: vorname, geburtstag: geburtstag})
+        }
+        return retValue;
     }
     catch (error) {
-        return error;
+        console.log("Fehler beim Speichern des Kunden" + error);
+        return 0;
     }
 }
 // Ja dafür brauchen wir die kundenId
@@ -125,7 +151,8 @@ export async function ändereAnzahl(id, anzahl) {
         }
 }
 
-export async function deckelMitKundenId(kundenId) {
+export async function deckelMitKundenIdExistiert(kundenId) {
     const dck = await db.deckel.where("kundenId").equals(kundenId).toArray();
-    return dck;
+    if (dck.length === 0) return false;
+    else return true;
 }

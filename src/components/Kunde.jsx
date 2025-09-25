@@ -14,14 +14,14 @@ export default function Kunde() {
     const inputRef = useRef(null);
     
     async function ladeKunde(id) {
-        const kunde = mdb.ladeKunde(id);
+        const kunde = await mdb.ladeKunde(id);
         setName(kunde.name);
         setVorname(kunde.vorname);
         setGeburtstag(kunde.geburtstag);
     }
 
     async function save() {
-        mdb.speichereKunde(currentId, name, vorname, geburtstag);
+        await mdb.speichereKunde(currentId, name, vorname, geburtstag);
         navigate("/kunden");
     }
 
@@ -47,9 +47,9 @@ export default function Kunde() {
         <div>
             <div className="container text-start">
                 <div className="row">
-                    {id ? <h2 className="text-info bg-dark p-2 text-center">Neuer Kunde</h2> 
+                    {(id != 0) ? <h2 className="text-info bg-dark p-2 text-center">Kunde {name} {vorname} bearbeiten</h2>
                         : 
-                        <h2 className="text-info bg-dark p-2 text-center">Kunde bearbeiten</h2>
+                        <h2 className="text-info bg-dark p-2 text-center">Neuer Kunde</h2> 
                         }
                 </div>
                 <div className="row m-2">

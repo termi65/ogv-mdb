@@ -16,12 +16,14 @@ export default function Getränk() {
         setPreis(getränk.preis);
     }
 
-    async function save() {
+    async function handleSubmit(e) {
+        e.preventDefault();
         try {
-            await mdb.speichereGetränk(currentId, bezeichnung, parseFloat(preis))
+            const res = await mdb.speichereGetränk(currentId, bezeichnung, parseFloat(preis));
+            console.log(res);
         }
-        catch {
-            alert("Fehler beim Speichern!");
+        catch (error) {
+            alert("Fehler beim Speichern!" + error);
         }
         navigate("/getraenke");
     }
@@ -47,55 +49,59 @@ export default function Getränk() {
         <div>
             <div className="container">
                 <div className="row">
-                    {id ? <h2 className="text-info bg-dark p-2 text-center">Neues Getränk</h2> 
-                        : <h2 className="text-info bg-dark p-2 text-center">Getränk bearbeiten</h2>}
+                    {(id != 0) ? <h2 className="text-info bg-dark p-2 text-center">Getränk {bezeichnung} bearbeiten</h2>
+                        : <h2 className="text-info bg-dark p-2 text-center">Neues Getränk</h2> }
                 </div>
-                <div className="row mb-2">
-                    <div className="col-sm-3"><label  className="input-group-text text-info" htmlFor='bezeichnung'>Bezeichnung: </label></div>
-                    <div className="col-sm-9">
-                        <div className="input-group">
-                            <input id='bezeichnung' ref={inputRef}
-                                aria-describedby="Getränkebezeichnung" className="form-control" 
-                                placeholder="Getränkebezeichnung" 
-                                onKeyDown={handleKeyDown}
-                                onChange={(e) => setBezeichnung(e.target.value)}
-                                value={bezeichnung} />
+                <form onSubmit={handleSubmit}>
+                    <div className="row mb-2">
+                        <div className="col-sm-3"><label  className="input-group-text text-info" htmlFor='bezeichnung'>Bezeichnung: </label></div>
+                        <div className="col-sm-9">
+                            <div className="input-group">
+                                <input id='bezeichnung' ref={inputRef}
+                                    aria-describedby="Getränkebezeichnung" className="form-control" 
+                                    placeholder="Getränkebezeichnung" 
+                                    required
+                                    onKeyDown={handleKeyDown}
+                                    onChange={(e) => setBezeichnung(e.target.value)}
+                                    value={bezeichnung} />
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="row mb-2">
-                    <div className="col-sm-3"><label  className="input-group-text text-info" htmlFor='preis'>Preis: </label></div>
-                    <div className="col-sm-9">
-                        <div className="input-group">
-                            <input id='preis' type='number' min="0"
-                                aria-describedby="Preis" className="form-control" 
-                                placeholder="Preis" 
-                                onKeyDown={handleKeyDown}
-                                onChange={(e) => setPreis(e.target.value)}
-                                value={preis} />
+                    <div className="row mb-2">
+                        <div className="col-sm-3"><label  className="input-group-text text-info" htmlFor='preis'>Preis: </label></div>
+                        <div className="col-sm-9">
+                            <div className="input-group">
+                                <input id='preis' 
+                                    type='number' min="0" step="0.1"
+                                    aria-describedby="Preis" className="form-control" 
+                                    placeholder="Preis"
+                                    required
+                                    onKeyDown={handleKeyDown}
+                                    onChange={(e) => setPreis(e.target.value)}
+                                    value={preis} />
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
-            <div className="row">
-                <div className="row p-3">
-                    <div className="col">
-                        <button className="m-1 w-100 rounded btn btn-primary" 
-                            onClick={save}
-                            onKeyDown={handleKeyDown}>
-                                Speichern
-                        </button>
+                
+                    <div className="row">
+                        <div className="row p-3">
+                            <div className="col">
+                                <button className="m-1 w-100 rounded btn btn-primary" type="submit"
+                                    onKeyDown={handleKeyDown}>
+                                        Speichern
+                                </button>
+                            </div>
+                            <div className="col">
+                                <button className="m-1 w-100 rounded btn btn-primary"
+                                    onClick={cancel}
+                                    onKeyDown={handleKeyDown}>
+                                        Abbrechen
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="col">
-                        <button className="m-1 w-100 rounded btn btn-primary"
-                            onClick={cancel}
-                            onKeyDown={handleKeyDown}>
-                                Abbrechen
-                        </button>
-                    </div>
-                </div>
+                </form>
             </div>
-
         </div>
     )
 }

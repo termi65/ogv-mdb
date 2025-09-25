@@ -51,9 +51,9 @@ export async function ladeKunden () {
 export async function ladeKunde (id) {
     try {
         const { data, error } = await supabase
-        .from("kunden")
-        .select("*")
-        .eq("id", id)
+            .from("kunden")
+            .select("*")
+            .eq("id", id)
 
         if (error) {
             console.error("Fehler beim Laden des Kunden: " + error.message);
@@ -64,6 +64,26 @@ export async function ladeKunde (id) {
     } catch (err) {
         console.error("Unerwarteter Fehler:", err);
         return null;
+    }
+}
+
+// Alle Zeilen des Deckels für den Kunden mit der Id: kid
+export async function ladeKundenDeckel (kid) {
+    try {
+        const { data, error } = await supabase
+            .from("deckel")
+            .select("*")
+            .eq("kundenId", kid)
+
+        if (error) {
+            console.error("Fehler beim Laden des Kunden: " + error.message);
+            return [];
+        }
+
+        return data ?? [];
+    } catch (err) {
+        console.error("Unerwarteter Fehler:", err);
+        return [];
     }
 }
 
@@ -105,18 +125,19 @@ export async function speichereKunde(kundenId, name, vorname, geburstag) {
 }
 
 export async function löscheDeckel(kundenId) {
-    const response = await supabase.from('deckel').delete.eq('kundenId',kundenId);
+    const response = await supabase.from('deckel').delete().eq('kundenId',kundenId);
     return response;
 }
 
 export async function löscheGetränk(id) {
-    const response = await supabase.from('getränke').delete.eq('id',id);
+    const response = await supabase.from('getränke').delete().eq('id',id);
     return response;
 }
 
 export async function löscheDeckelGetränk(deckelId, kundenId) {
     const {data, error} = await supabase
         .from("deckel")
+        .select("*")
         .eq("kundenId", kundenId);
     // Falls es nur einen Eintrag für diesen Kunden gibt, muss der Deckel gelöscht werden!
     if (data.length === 1) {
@@ -124,13 +145,13 @@ export async function löscheDeckelGetränk(deckelId, kundenId) {
     } else {
         await supabase
             .from("deckel")
-            .delete
+            .delete()
             .eq("id", deckelId);
     }
 }
 
-export async function löscheKunden(id) {
-    const response = await supabase.from('kunden').delete.eq('id',id);
+export async function löscheKunde(id) {
+    const response = await supabase.from('kunden').delete().eq('id',id);
     return response;
 }
 
@@ -146,9 +167,13 @@ export async function ändereAnzahl(id, anzahl) {
     }
 }
 
-export async function deckelMitKundenId(kundenId) {
+export async function deckelMitKundenIdExistiert(kundenId) {
     const {data} = await supabase
-        .from("kunden")
-        .where({kundenId: kundenId});
-    return data;
+        .from("deckel")
+        .select("*")
+        .eq("kundenId", kundenId);
+    return data ? true : false;
+    // oder doch:
+    // if (data.length === 0) return false;
+    // else return true;
 }

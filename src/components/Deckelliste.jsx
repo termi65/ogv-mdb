@@ -95,7 +95,6 @@ const Deckelliste = () => {
     useEffect(() => {
         if (geladen.current) return;
         ladeDaten();
-        console.log("useEffect");
     },[]);
 
     return (

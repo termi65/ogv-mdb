@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import { db } from "../utils/db";
+import * as mdb from "../utils/dbfunctions";
 import formatNumber from "../utils/formatNumber";
 
 export default function Deckel() {
@@ -8,14 +8,14 @@ export default function Deckel() {
     const navigate = useNavigate();
     // Der Deckel wird anhand der KundenId identifiziert. Dabei können einzelne Positionen anhand der id leicht ermittelt werden.
     const {kundenId} = useParams();
-    const [selectedKunde, setSelectedKunde] = useState(null);
+    const [selectedKunde, setSelectedKunde] = useState(0);
     const [kundenliste, setKundenliste] = useState([]);
     const [kunde, setKunde] = useState({name:'', vorname: '', geburtstag: ''});
     const [getränkeliste, setGetränkeliste] = useState([]);
-    const [selectedGetränk, setSelectedGetränk] = useState([]);
+    const [selectedGetränk, setSelectedGetränk] = useState(0);
     
     const ladeKunden = async(d) => {
-        const k = await db.kunden.toArray();
+        const k = await mdb.ladeKunden();
         const kundenOhneDeckel = k.filter(kunde =>
             !d.some(deckel => deckel.kundenId === kunde.id)
         );
@@ -23,7 +23,7 @@ export default function Deckel() {
     }
 
     const ladeGetränke = async(d) => {
-        const g = await db.getränke.toArray();
+        const g = await mdb.ladeGetränke();
         const getränkeNichtAufDeckel = g.filter(getränk =>
             !d.some(deckel => deckel.getränkId === getränk.id)
         );
@@ -32,17 +32,17 @@ export default function Deckel() {
 
     // Hier brauch ich keine Kundenliste nur den Kunden.
     const ladeDeckel = async (kid) => {
-        const d = await db.deckel.where("kundenId").equals(kid).toArray();
-        const k = await db.kunden.where("id").equals(kid).first();
+        const d = await mdb.ladeKundenDeckel(kid);
+        const k = await mdb.ladeKunde(kid);
         setKunde(k);
         await ladeGetränke(d);
 
     }
 
     const ladeDatenFürNeuenDeckel = async () => {
-        const d = await db.deckel.toArray();
+        const d = await mdb.ladeDeckel();
         await ladeKunden(d);
-        const g = await db.getränke.toArray();
+        const g = await mdb.ladeGetränke();
         setGetränkeliste(g);
     }
 
@@ -55,21 +55,32 @@ export default function Deckel() {
         inputRef.current.focus(); 
     },[]);
     
+    const ermittleMaxKundenVorname = async() => {
+        const unbekannteKunden = await mdb.ladeKunden();
+        const ubks = unbekannteKunden.filter((item) => item.name === "Kunde");
+        
+        if (ubks.length === 0)
+            return 0;
+
+        var res = Math.max.apply(null, ubks.map(function(o) { 
+            return o.vorname; }));
+        return res;
+    }
+
     // Beim Verzehr wird nur hinzugefügt (ein komplett neuer Deckel oder auf dem Deckel ein neues Getränk!).
     const insertDeckel = async () => {
         try {
             if (kundenId != "0") {
-                await db.deckel.add({kundenId:parseFloat(kundenId), getränkId: parseFloat(selectedGetränk), anzahl:1});
+                await mdb.speichereDeckel(kundenId, parseFloat(selectedGetränk));
                 
             } else {
                 // Falls kein Kunde ausgewählt wurde (mit selecedKunde) wird ein neuer Kunde mit Namen Kunde[N] angelegt, wobei N = max(#unbekannte Kunden)+1
                 if (!selectedKunde) {
-                    const Unbekannte = await db.kunden.where("name").equals("Kunde").toArray();
-                    const ind = Unbekannte.length + 1;
-                    const kid = await db.kunden.add({name: "Kunde", vorname: ind.toString(), geburtstag: 0});
-                    db.deckel.add({kundenId: kid, getränkId: parseFloat(selectedGetränk), anzahl:1});
+                    const ind = await ermittleMaxKundenVorname() + 1;
+                    const kid = await mdb.speichereKunde(0, "Kunde", ind.toString(), 0);
+                    await mdb.speichereDeckel(kid, parseFloat(selectedGetränk));
                 } else
-                    await db.deckel.add({kundenId: parseFloat(selectedKunde), getränkId: parseFloat(selectedGetränk), anzahl:1});
+                    await mdb.speichereDeckel(parseFloat(selectedKunde), parseFloat(selectedGetränk));
             }
         }
         catch(error) {
@@ -96,7 +107,7 @@ export default function Deckel() {
 
     return (
         <div className="container mt-4" onKeyDown={handleKeyDown}>
-            <h2 className="text-info bg-dark p-2 text-center">{(kundenId != "0") ? `Deckel von ${kunde.name} , ${kunde.vorname}` : "Neuer Deckel"}</h2>
+            <h2 className="text-info bg-dark p-2 text-center">{(kundenId != "0") ? `Deckel von ${kunde.name} ${kunde.vorname}` : "Neuer Deckel"}</h2>
             <form onSubmit={handleSubmit}>
                 {(kundenId != "0")  ? 
                     <div>
@@ -119,7 +130,7 @@ export default function Deckel() {
                     <div>
                         <p><select ref={inputRef}
                                 className="form-select bg-secondary"
-                                value={selectedKunde}
+                                value={selectedKunde ?? ''}
                                 onChange={(e) => setSelectedKunde(e.target.value)}
                                 onKeyDown={handleKeyDown}
                             >
