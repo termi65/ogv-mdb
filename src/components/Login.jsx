@@ -3,8 +3,8 @@ import supabase from "../utils/supabase";
 import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
+    const [email, setEmail] = useState('m.hoffmann65@t-online.de');
+    const [password, setPassword] = useState('aLine98/03');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
@@ -50,7 +50,13 @@ const Login = () => {
                     <label htmlFor="email" className="mb-1 w-100 p-1 bg-primary text-light rounded">
                         Email
                     </label>
-                    <input type="text" autoComplete="username" required placeholder="Email" className="form-control border border-primary" id="email" value={email} onChange={e => setEmail(e.target.value)} />
+                    <input type="text" autoComplete="username" 
+                        required 
+                        placeholder="Email"
+                        className="form-control border border-primary"
+                        id="email"
+                        value={email}
+                        onChange={e => setEmail(e.target.value)} />
                 </div>
                 <div className="mb-3">
                     <label htmlFor="password" className="mb-1 w-100 p-1 bg-primary text-light rounded">

@@ -14,7 +14,6 @@ export default function Kunden() {
 
     useEffect(() => {
         loadKunden();
-
     },[])
     
     async function loadKunden() {
@@ -26,16 +25,23 @@ export default function Kunden() {
         navigate(`/kunde/${id}`);
     }
 
-    async function deleteKunde() {
-        const findDeckel = await mdb.deckelMitKundenIdExistiert(currentKundenId);
-        
-        if (findDeckel){
-            alert("Deckel vorhanden. Kann Kunden nicht löschen!");
+    async function kundeLöschbar(id) {
+        const fd = await mdb.deckelMitKundenIdExistiert(id);
+        if (fd) {
+            alert("Kunde hat einen Deckel und kann nicht gelöscht werden!");
         } else {
-            console.log("Keine Deckel vorhanden - Kunde wird gelöscht!");
-            await mdb.löscheKunde(currentKundenId);
-            loadKunden();
+            setShowModalEintrag(true);
         }
+    }
+
+    async function deleteKunde() {
+        await mdb.löscheKunde(currentKundenId);
+        loadKunden();
+    }
+
+    async function löscheKunde(id) {
+        setCurrentKundenId(id);
+        kundeLöschbar(id);
     }
 
     return (
@@ -93,7 +99,7 @@ export default function Kunden() {
                             {screenSize ==="sm" || screenSize ==="xs" ? 
                                 <td className="text-center">
                                     <button type="button" className="btn bg-danger text-light"
-                                        onClick={() => {setCurrentKundenId(Number(kunde.id)); setShowModalEintrag(true); }}>
+                                        onClick={() => löscheKunde(kunde.id)}>
                                         <i className="bi bi-x-square"></i>
                                     </button>
                                     
@@ -101,7 +107,7 @@ export default function Kunden() {
                                 :
                                 <td className="text-center">
                                 <button type="button" className="btn bg-danger text-light"
-                                    onClick={() => {setCurrentKundenId(Number(kunde.id)); setShowModalEintrag(true); }}>
+                                    onClick={() => löscheKunde(kunde.id)}>
                                     Löschen
                                 </button>
                             </td>

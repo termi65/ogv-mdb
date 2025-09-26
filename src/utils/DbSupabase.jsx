@@ -107,24 +107,42 @@ export async function ladeKundenMitDeckel(dl) {
     return kmd;
 }
 
-export async function speichereDeckel(kundenId, getränkeId) {
-    const res = await supabase.from("deckel").insert({kundenId: kundenId, getränkeId: getränkeId});
-    return res;
+export async function speichereDeckel(kundenId, getränkId) {
+    const {data, error} = await supabase.from("deckel").insert({kundenId: kundenId, getränkId: getränkId, anzahl: 1});
+    return data[0].id;
 }
 
 export async function speichereGetränk(id, bezeichnung, preis) {
-    id === 0 
-        ? await supabase.from('getränke').insert({bezeichnung: bezeichnung, preis: preis})
-        : await supabase.from('getränke').update({bezeichnung: bezeichnung, preis: preis}).eq(id, id);
+    if (id === 0) {
+       const {data, error} = await supabase.from('getränke').insert({bezeichnung: bezeichnung, preis: preis}).select("id");
+       return data[0].id;
+    } else {
+        await supabase.from('getränke').update({bezeichnung: bezeichnung, preis: preis}).eq("id", id)
+        return id;
+    }
 }
 
-export async function speichereKunde(kundenId, name, vorname, geburstag) {
-    kundenId === 0 
-        ? await supabase.from('kunden').insert({name: name, vorname: vorname, geburstag: geburstag ?? null})
-        : await supabase.from('kunden').update({name: name, vorname: vorname, geburstag: geburstag ?? null}).eq(id, id);
+export async function speichereKunde(kundenId, name, vorname, geburtstag) {
+    console.log("speichere Kunde");
+    try {
+        if (kundenId === 0) {
+            console.log("einfügen");
+            const {data, error} = await supabase.from('kunden').insert({name: name, vorname: vorname, geburtstag: geburtstag}).select("id");
+            console.log("data:", data[0].id);
+            return data[0].id;
+        }
+        else {
+            console.log("aktualisierenn");
+            await supabase.from('kunden').update({name: name, vorname: vorname, geburtstag: geburtstag}).eq("id", kundenId);
+        }
+    } catch(error) {
+        console.log(error.message);
+    }
 }
 
 export async function löscheDeckel(kundenId) {
+    // Erst Kunden des Deckels ermitteln
+
     const response = await supabase.from('deckel').delete().eq('kundenId',kundenId);
     return response;
 }
@@ -172,8 +190,6 @@ export async function deckelMitKundenIdExistiert(kundenId) {
         .from("deckel")
         .select("*")
         .eq("kundenId", kundenId);
-    return data ? true : false;
-    // oder doch:
-    // if (data.length === 0) return false;
-    // else return true;
+    if (data.length === 0) return false;
+    else return true;
 }
