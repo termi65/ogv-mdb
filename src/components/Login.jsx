@@ -2,14 +2,18 @@ import { useState, useEffect } from 'react';
 import supabase from "../utils/supabase";
 import { useNavigate } from 'react-router-dom';
 
+import { useDb } from '../utils/DbContext';
+
 const Login = () => {
-    const [email, setEmail] = useState('m.hoffmann65@t-online.de');
-    const [password, setPassword] = useState('aLine98/03');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
-
+    
+    const {setActDb} = useDb();
+    
     const handleLogin = async (e) => {
         e.preventDefault();
         
@@ -24,13 +28,18 @@ const Login = () => {
 
         if (loginError) {
             setError(loginError.message);
+            alert(loginError.message);
+            setActDb("indexeddb");
+            setLoading(false);
+            return;
         }
         const { data: sessionData } = await supabase.auth.getSession();
         console.log("Neue Session:", sessionData);
 
-
         setLoading(false);
         console.log('Erfolgreich angemeldet:', data);
+        setActDb("supabase");
+
         navigate('/');
     }
 
@@ -45,7 +54,7 @@ const Login = () => {
     return(
     	<div className='container mt-4'>
             <h2 className="text-info bg-dark p-2 text-center">Anmelden</h2>
-            <form onSubmit={handleLogin}>            
+            <form onSubmit={handleLogin}>
                 <div className="mb-3">
                     <label htmlFor="email" className="mb-1 w-100 p-1 bg-primary text-light rounded">
                         Email

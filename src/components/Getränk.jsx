@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import * as mdb from "../utils/dbfunctions";
+
+import { getDb } from '../utils/dbAdapter'
+import { useDb } from "../utils/DbContext.jsx";
 
 export default function Getränk() {
     const inputRef = useRef(null);
@@ -9,9 +11,12 @@ export default function Getränk() {
     const [currentId, setCurrentId] = useState(0);
     const {id} = useParams();
     const navigate = useNavigate()
-    
+ 
+    const { actDb } = useDb();
+    const setActDb = getDb(actDb);
+
     async function ladeGetränk(id) {
-        const getränk = await mdb.ladeGetränk(id);
+        const getränk = await setActDb.ladeGetränk(id);
         setBezeichnung(getränk.bezeichnung);
         setPreis(getränk.preis);
     }
@@ -19,7 +24,7 @@ export default function Getränk() {
     async function handleSubmit(e) {
         e.preventDefault();
         try {
-            const res = await mdb.speichereGetränk(currentId, bezeichnung, parseFloat(preis));
+            const res = await setActDb.speichereGetränk(currentId, bezeichnung, parseFloat(preis));
             console.log(res);
         }
         catch (error) {

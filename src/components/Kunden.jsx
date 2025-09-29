@@ -3,7 +3,10 @@ import { useNavigate } from "react-router-dom";
 import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 
-import * as mdb from "../utils/dbfunctions";
+
+import { getDb } from '../utils/dbAdapter'
+import { useDb } from "../utils/DbContext.jsx";
+
 
 export default function Kunden() {
     const [showModalEintrag, setShowModalEintrag] = useState(false);
@@ -11,14 +14,18 @@ export default function Kunden() {
     const [currentKundenId, setCurrentKundenId] = useState(-1);
     const navigate = useNavigate();
     const screenSize = useScreenSize();
+    const [loaded, setLoaded]  = useState(false);
+    const { actDb } = useDb();
+    const setActDb = getDb(actDb);
 
     useEffect(() => {
         loadKunden();
     },[])
     
     async function loadKunden() {
-        const alleKunden = await mdb.ladeKunden();
+        const alleKunden = await setActDb.ladeKunden();
         setKunden(alleKunden); 
+        setLoaded(true);
     }
 
     function editKunde(id) {
@@ -26,7 +33,7 @@ export default function Kunden() {
     }
 
     async function kundeLöschbar(id) {
-        const fd = await mdb.deckelMitKundenIdExistiert(id);
+        const fd = await setActDb.deckelMitKundenIdExistiert(id);
         if (fd) {
             alert("Kunde hat einen Deckel und kann nicht gelöscht werden!");
         } else {
@@ -35,7 +42,7 @@ export default function Kunden() {
     }
 
     async function deleteKunde() {
-        await mdb.löscheKunde(currentKundenId);
+        await setActDb.löscheKunde(currentKundenId);
         loadKunden();
     }
 
@@ -43,7 +50,10 @@ export default function Kunden() {
         setCurrentKundenId(id);
         kundeLöschbar(id);
     }
-
+    
+    if (!loaded) {
+        return <div>Lade...</div>;
+    }
     return (
         <div className="container mt-4">
             <h2 className="text-info bg-dark p-2 text-center">Kundenliste

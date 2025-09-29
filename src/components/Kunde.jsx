@@ -1,20 +1,27 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import * as mdb from "../utils/dbfunctions";
+
+// useDb aus dem DbContext gibt actDb (aktueller Datenbankname) 
+// und setActDb() (Die Funktion zum Ändern des Datenbanknamens) zurück!
+import { useDb } from "../utils/DbContext.jsx";
+// Mit der Funktion getDb(aktuellerDatenbankName)
+import { getDb } from '../utils/dbAdapter'
 
 export default function Kunde() {
     
     const [name, setName] = useState("");
     const [vorname, setVorname] = useState("");
     const [geburtstag, setGeburtstag] = useState("");
-
     const [currentId, setCurrentId] = useState(0);
+    const { actDb, setActDb } = useDb();
+    const db = getDb(actDb);
+    
     const {id} = useParams();
     const navigate = useNavigate()
     const inputRef = useRef(null);
     
     async function ladeKunde(id) {
-        const kunde = await mdb.ladeKunde(id);
+        const kunde = await db.ladeKunde(id);
         setName(kunde.name);
         setVorname(kunde.vorname);
         setGeburtstag(kunde.geburtstag);
@@ -22,7 +29,7 @@ export default function Kunde() {
 
     async function save(e) {
         e.preventDefault();
-        await mdb.speichereKunde(currentId, name, vorname, geburtstag);
+        await db.speichereKunde(currentId, name, vorname, geburtstag);
         navigate("/kunden");
     }
 
@@ -62,6 +69,7 @@ export default function Kunde() {
                                     ref={inputRef}
                                     aria-describedby="Nachname" className="form-control" 
                                     placeholder="Nachname" 
+                                    required
                                     onChange={(e) => setName(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     value={name} />
@@ -74,7 +82,8 @@ export default function Kunde() {
                             <div className="input-group">
                                 <input id='vorname' 
                                     aria-describedby="Vorname" className="form-control" 
-                                    placeholder="Vorname" 
+                                    placeholder="Vorname"
+                                    required
                                     onChange={(e) => setVorname(e.target.value)}
                                     onKeyDown={handleKeyDown}
                                     value={vorname} />

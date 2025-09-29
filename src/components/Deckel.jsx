@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom"
-import * as mdb from "../utils/dbfunctions";
 import formatNumber from "../utils/formatNumber";
+
+import { getDb } from '../utils/dbAdapter'
+import { useDb } from "../utils/DbContext.jsx";
 
 export default function Deckel() {
     const inputRef = useRef(null);
@@ -14,8 +16,12 @@ export default function Deckel() {
     const [getränkeliste, setGetränkeliste] = useState([]);
     const [selectedGetränk, setSelectedGetränk] = useState(0);
     
+    const { actDb } = useDb();
+    const setActDb = getDb(actDb);
+
+    
     const ladeKunden = async(d) => {
-        const k = await mdb.ladeKunden();
+        const k = await setActDb.ladeKunden();
         const kundenOhneDeckel = k.filter(kunde =>
             !d.some(deckel => deckel.kundenId === kunde.id)
         );
@@ -23,7 +29,7 @@ export default function Deckel() {
     }
 
     const ladeGetränke = async(d) => {
-        const g = await mdb.ladeGetränke();
+        const g = await setActDb.ladeGetränke();
         const getränkeNichtAufDeckel = g.filter(getränk =>
             !d.some(deckel => deckel.getränkId === getränk.id)
         );
@@ -32,17 +38,17 @@ export default function Deckel() {
 
     // Hier brauch ich keine Kundenliste nur den Kunden.
     const ladeDeckel = async (kid) => {
-        const d = await mdb.ladeKundenDeckel(kid);
-        const k = await mdb.ladeKunde(kid);
+        const d = await setActDb.ladeKundenDeckel(kid);
+        const k = await setActDb.ladeKunde(kid);
         setKunde(k);
         await ladeGetränke(d);
 
     }
 
     const ladeDatenFürNeuenDeckel = async () => {
-        const d = await mdb.ladeDeckel();
+        const d = await setActDb.ladeDeckel();
         await ladeKunden(d);
-        const g = await mdb.ladeGetränke();
+        const g = await setActDb.ladeGetränke();
         setGetränkeliste(g);
     }
 
@@ -56,7 +62,7 @@ export default function Deckel() {
     },[]);
     
     const ermittleMaxKundenVorname = async() => {
-        const unbekannteKunden = await mdb.ladeKunden();
+        const unbekannteKunden = await setActDb.ladeKunden();
         const ubks = unbekannteKunden.filter((item) => item.name === "Kunde");
         
         if (ubks.length === 0)
@@ -71,16 +77,16 @@ export default function Deckel() {
     const insertDeckel = async () => {
         try {
             if (kundenId != "0") {
-                await mdb.speichereDeckel(kundenId, parseFloat(selectedGetränk));
+                await setActDb.speichereDeckel(kundenId, parseFloat(selectedGetränk));
                 
             } else {
                 // Falls kein Kunde ausgewählt wurde (mit selecedKunde) wird ein neuer Kunde mit Namen Kunde[N] angelegt, wobei N = max(#unbekannte Kunden)+1
                 if (!selectedKunde) {
                     const ind = await ermittleMaxKundenVorname() + 1;
-                    const kid = await mdb.speichereKunde(0, "Kunde", ind.toString(), 0);
-                    await mdb.speichereDeckel(kid, parseFloat(selectedGetränk));
+                    const kid = await setActDb.speichereKunde(0, "Kunde", ind.toString(), 0);
+                    await setActDb.speichereDeckel(kid, parseFloat(selectedGetränk));
                 } else
-                    await mdb.speichereDeckel(parseFloat(selectedKunde), parseFloat(selectedGetränk));
+                    await setActDb.speichereDeckel(parseFloat(selectedKunde), parseFloat(selectedGetränk));
             }
         }
         catch(error) {

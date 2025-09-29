@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react";
 import supabase from "../utils/supabase";
-const currentDb = import.meta.env.VITE_ACTIVE_DB;
+// const currentDb = import.meta.env.VITE_ACTIVE_DB;
+
+import { getDb } from '../utils/dbAdapter'
+import { useDb } from "../utils/DbContext";
 
 export default function Home() {
     const [user, setUser] = useState(null);
-    
+    const { actDb } = useDb();
+    const db = getDb(actDb);
 
     useEffect(() => {
         const checkUser = async () => {
@@ -30,7 +34,7 @@ export default function Home() {
             <section>Das Löschen eines Deckels kann nicht rückgängig gemacht werden! Den Kunden also sorgsam abziehen! </section>
             <hr />
             <div className="container m-4 bg-secondary">
-                <p>Sie arbeiten aktuell auf {currentDb === "indexeddb" ? "IndexDb des Browsers" : "supabase im Web"} </p>
+                <p>Sie arbeiten aktuell auf {actDb} </p>
             </div>
         </div>
     )

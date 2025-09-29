@@ -1,31 +1,26 @@
-// 
-import * as dex from "./DbDexie";
-import * as supab from "./DbSupabase";
+import { getDb } from "./dbAdapter";
 
-const currentDb = import.meta.env.VITE_ACTIVE_DB;
-
-// Wähle die "aktive" Implementierung
-const db = currentDb === "indexeddb" ? dex : supab;
-
+// const actDb = import.meta.env.VITE_ACTIVE_DB;
 
 // Exportiere einfach alle Funktionen, die beide haben
-export const ladeDeckel = db.ladeDeckel;
-export const ladeGetränke = db.ladeGetränke;
-export const ladeGetränk = db.ladeGetränk;
-export const ladeKunden = db.ladeKunden;
-export const ladeKunde = db.ladeKunde;
-export const ladeKundenMitDeckel = db.ladeKundenMitDeckel;
-export const ladeKundenDeckel = db.ladeKundenDeckel;
+export const ladeDeckel = getDb().ladeDeckel;
+export const ladeGetränke = getDb().ladeGetränke;
+export const ladeGetränk = getDb().ladeGetränk;
+export const ladeKunden = getDb().ladeKunden;
+export const ladeKunde = getDb().ladeKunde;
+export const ladeKundenMitDeckel = getDb().ladeKundenMitDeckel;
+export const ladeKundenDeckel = getDb().ladeKundenDeckel;
 
-export const speichereDeckel = db.speichereDeckel;
-export const speichereGetränk = db.speichereGetränk;
-export const speichereKunde = db.speichereKunde;
+export const speichereDeckel = getDb().speichereDeckel;
+export const speichereGetränk = getDb().speichereGetränk;
+export const speichereKunde = getDb().speichereKunde;
 
-export const löscheDeckel = db.löscheDeckel;
-export const löscheDeckelGetränk = db.löscheDeckelGetränk;
-export const löscheGetränk = db.löscheGetränk;
-export const löscheKunde = db.löscheKunde;
+export const löscheDeckel = getDb().löscheDeckel;
+export const löscheDeckelGetränk = getDb().löscheDeckelGetränk;
+export const löscheGetränk = getDb().löscheGetränk;
+export const löscheKunde = getDb().löscheKunde;
 // Spezialfunktionen
-export const ändereAnzahl = db.ändereAnzahl;
-export const deckelMitKundenIdExistiert = db.deckelMitKundenIdExistiert;
+export const ändereAnzahl = getDb().ändereAnzahl;
+export const deckelMitKundenIdExistiert = getDb().deckelMitKundenIdExistiert;
 
+export const deckelMitGetränkIdExistiert = getDb().deckelMitGetränkIdExistiert;

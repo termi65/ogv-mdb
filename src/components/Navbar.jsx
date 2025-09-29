@@ -2,9 +2,15 @@ import { Link } from "react-router-dom";
 import { useState, useEffect } from "react";
 import supabase from "../utils/supabase";
 
+
+import { useDb } from "../utils/DbContext.jsx";
+
 export default function Navbar() {
     const [isNavCollapsed, setIsNavCollapsed] = useState(true);
     const [user, setUser] = useState(null);
+    
+    const { actDb, setActDb } = useDb();
+    
 
     const handleNavCollapse = () => setIsNavCollapsed(!isNavCollapsed);
     const closeNav = () => {
@@ -15,9 +21,10 @@ export default function Navbar() {
     const handleLogout = async () => {
         const { error } = await supabase.auth.signOut();
         if (error) console.error('Fehler beim Abmelden:', error.message);
+        else setActDb("indexeddb");
       };
 
-      useEffect(() => {
+    useEffect(() => {
         const checkUser = async () => {
             const { data } = await supabase.auth.getUser();
             setUser(data?.user);
@@ -29,6 +36,7 @@ export default function Navbar() {
             setUser(session?.user || null);
         });
 
+        console.log("actDb:" + actDb);
         return () => authListener?.subscription.unsubscribe();
     }, []);
 
@@ -71,6 +79,7 @@ export default function Navbar() {
                                     <Link to="/login" className="px-2 text-info" onClick={closeNav}><i className="bi bi-unlock"></i>Login</Link>
                                 </li>
                             }
+                            <li>Sie arbeiten auf <span className="text-info-emphasis">{actDb}</span> </li>
                         </ul>
                     </div>
                 </div>

@@ -156,3 +156,9 @@ export async function deckelMitKundenIdExistiert(kundenId) {
     if (dck.length === 0) return false;
     else return true;
 }
+
+export async function deckelMitGetränkIdExistiert(id) {
+    const dck = await db.deckel.where("getränkId").equals(id).toArray();
+    if (dck.length === 0) return false;
+    else return true;
+}

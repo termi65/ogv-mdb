@@ -193,3 +193,12 @@ export async function deckelMitKundenIdExistiert(kundenId) {
     if (data.length === 0) return false;
     else return true;
 }
+
+export async function deckelMitGetränkIdExistiert(getränkId) {
+    const {data} = await supabase
+        .from("deckel")
+        .select("*")
+        .eq("getränkId", getränkId);
+    if (data.length === 0) return false;
+    else return true;
+}

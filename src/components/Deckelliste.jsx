@@ -7,7 +7,10 @@ import useScreenSize from "../utils/useScreenSize";
 import Dialog from "./Dialog";
 import { useNavigate } from "react-router-dom";
 import formatNumber from "../utils/formatNumber";
-import * as mdb from "../utils/dbfunctions";
+
+import { getDb } from '../utils/dbAdapter'
+import { useDb } from "../utils/DbContext.jsx";
+
 
 const Deckelliste = () => {
     const screenSize = useScreenSize();
@@ -22,6 +25,11 @@ const Deckelliste = () => {
     const [currentKundenId, setCurrentKundenId] = useState(0);
     const [currentDeckelId, setCurrentDeckelId] = useState(0);
     const [animationStates, setAnimationStates] = useState({});
+
+    const { actDb } = useDb();
+    const setActDb = getDb(actDb);
+
+    const [loaded, setLoaded]  = useState(false);
 
     // wir triggern nur den Eintrag mit der übergebenen ID
     const triggerAnimation = (id, operator) =>{
@@ -45,26 +53,26 @@ const Deckelliste = () => {
     }
 
     const incGetränk = async (id, anzahl) => {
-        await mdb.ändereAnzahl(id, anzahl+1);
+        await setActDb.ändereAnzahl(id, anzahl+1);
         await ladeDaten();
         triggerAnimation(id, 'plus');
     }
 
     const decGetränk = async (id, anzahl) => {
-        await mdb.ändereAnzahl(id, anzahl-1);
+        await setActDb.ändereAnzahl(id, anzahl-1);
         await ladeDaten();
         triggerAnimation(id, 'minus');
     }
 
     const deleteDeckel = async () => {
-        await mdb.löscheDeckel(currentKundenId);
+        await setActDb.löscheDeckel(currentKundenId);
         ladeDaten();
         
     }
 
     const delGetränk = async () => {
         try {
-            await mdb.löscheDeckelGetränk(currentDeckelId, currentKundenId);
+            await setActDb.löscheDeckelGetränk(currentDeckelId, currentKundenId);
         }
         catch (error) {
             alert("Fehler! " + error);
@@ -72,9 +80,9 @@ const Deckelliste = () => {
     }
 
     const ladeDaten = async () => {
-        const dl = await mdb.ladeDeckel();
-        const kl = await mdb.ladeKundenMitDeckel(dl);
-        const gl = await mdb.ladeGetränke();
+        const dl = await setActDb.ladeDeckel();
+        const kl = await setActDb.ladeKundenMitDeckel(dl);
+        const gl = await setActDb.ladeGetränke();
         
         const dlMitNamen = dl.map(eintrag => {
             // Den Kunden ermitteln
@@ -90,14 +98,19 @@ const Deckelliste = () => {
         });
         setDeckelliste(dlMitNamen);
         setKundenMitDeckel(kl);
+        setLoaded(true);
     };
 
     useEffect(() => {
-        if (geladen.current) return;
         ladeDaten();
     },[]);
 
+    if (!loaded) {
+        return <div>Lade...</div>;
+    }
+
     return (
+        
         <div className="container mt-4">
             <h2 className="text-info bg-dark p-2 text-center">Deckelsammlung 
                 <button type="button" className="ms-2 p-2 btn btn-primary" onClick={() => navigate(`/deckel/0`)}>
