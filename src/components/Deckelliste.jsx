@@ -73,6 +73,7 @@ const Deckelliste = () => {
     const delGetränk = async () => {
         try {
             await setActDb.löscheDeckelGetränk(currentDeckelId, currentKundenId);
+            ladeDaten();
         }
         catch (error) {
             alert("Fehler! " + error);

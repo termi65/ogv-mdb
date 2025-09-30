@@ -73,11 +73,11 @@ export default function Deckel() {
         return res;
     }
 
-    // Beim Verzehr wird nur hinzugefügt (ein komplett neuer Deckel oder auf dem Deckel ein neues Getränk!).
+    // Beim Deckel wird nur hinzugefügt (ein komplett neuer Deckel oder auf dem Deckel ein neues Getränk!).
     const insertDeckel = async () => {
         try {
             if (kundenId != "0") {
-                await setActDb.speichereDeckel(kundenId, parseFloat(selectedGetränk));
+                await setActDb.speichereDeckel(parseFloat(kundenId), parseFloat(selectedGetränk));
                 
             } else {
                 // Falls kein Kunde ausgewählt wurde (mit selecedKunde) wird ein neuer Kunde mit Namen Kunde[N] angelegt, wobei N = max(#unbekannte Kunden)+1
