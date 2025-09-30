@@ -104,17 +104,21 @@ export default function Kunde() {
                         </div>
                     </div>
                 
-                    <div className="position-relative">
-                        <div className="position-absolute bg-secondary top-0 start-50 translate-middle-x">
-                            <button className="m-1 text-center" type="submit"
-                                onKeyDown={handleKeyDown}>
-                                    Speichern
-                            </button>
-                            <button className="m-1 text-center"
-                                onClick={cancel}
-                                onKeyDown={handleKeyDown}>
-                                    Abbrechen
-                            </button>
+                    <div className="row">
+                        <div className="row p-3">
+                            <div className="col">
+                                <button className="m-1 w-100 rounded btn btn-primary" type="submit"
+                                    onKeyDown={handleKeyDown}>
+                                        Speichern
+                                </button>
+                            </div>
+                            <div className="col">
+                                <button className="m-1 w-100 rounded btn btn-primary" type="submit"
+                                    onClick={cancel}
+                                    onKeyDown={handleKeyDown}>
+                                        Abbrechen
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </form>
