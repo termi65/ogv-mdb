@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import supabase from "../utils/supabase";
 import { useNavigate } from 'react-router-dom';
+import {Button, Modal} from 'react-bootstrap';
 
 import { useDb } from '../utils/DbContext';
 
@@ -11,7 +12,7 @@ const Login = () => {
     const [error, setError] = useState(null);
     const [user, setUser] = useState(null);
     const navigate = useNavigate();
-    
+    const [showModal, setShowModal] = useState(false);
     const {setActDb} = useDb();
     
     const handleLogin = async (e) => {
@@ -27,10 +28,11 @@ const Login = () => {
         });
 
         if (loginError) {
-            setError(loginError.message);
-            alert(loginError.message);
-            setActDb("indexeddb");
-            setLoading(false);
+            setError('Falsche Benutzerkennung');
+            setShowModal(true);
+            // alert(loginError.message);
+            // setActDb("indexeddb");
+            // setLoading(false);
             return;
         }
         const { data: sessionData } = await supabase.auth.getSession();
@@ -76,8 +78,16 @@ const Login = () => {
                 <button type="submit" className="w-100 rounded btn btn-primary" disabled={loading}>
                     {loading ? 'Lädt...' : 'Anmelden'}
                 </button>
-            {error && <p style={{ color: 'red' }}>{error}</p>}
             </form>
+            <Modal show={showModal} onHide={() => {setShowModal(false); setLoading(false);}}>
+                <Modal.Header closeButton>
+                <Modal.Title>Fehler</Modal.Title>
+                </Modal.Header>
+                <Modal.Body>{error}</Modal.Body>
+                <Modal.Footer>
+                <Button variant="secondary" onClick={() => {setShowModal(false); window.location.reload();}}>Schließen</Button>
+                </Modal.Footer>
+            </Modal>
         </div>
     );
 }
